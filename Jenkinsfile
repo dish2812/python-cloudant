@@ -61,9 +61,10 @@ stage('Checkout'){
 }
 
 stage('Test'){
+  def py2 = '2'
   def py3 = '3'
   def axes = [:]
-  [py3].each { version ->
+  [py2, py3].each { version ->
     ['basic','cookie','iam'].each { auth ->
        axes.put("Python${version}-${auth}", {setupPythonAndTest(version, auth)})
     }
