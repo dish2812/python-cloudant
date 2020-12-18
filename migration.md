@@ -9,68 +9,83 @@ There are several ways to create a client connection in `cloudant-python-sdk`:
 
 [See the README](https://github.com/IBM/cloudant-python-sdk#1-retrieve-information-from-an-existing-database) for code examples on using enviornment variables.
 
-## Dictionary cache
-The `cloudant-python-sdk` does not support local dictionary caching of database and document objects.
-For example, the `python-cloudant` code below would get and modify the `docid` document:
-```python
-service = Cloudant(...)
-db = service['example_db']
-doc = db['docid']
-# get document from remote db
-doc.fetch()
-# add new field and value
-doc['newfield'] = 'newvalue'
-# update document in remote db and update latest revision in local cache
-doc.save()
-```
-The same example for `cloudant-python-sdk` is shown below:
-```python
-service = CloudantV1.new_instance()
-db_name = 'example_db'
-doc_id = 'docid'
-# get document from remote db
-doc = service.get_document(
-    db=db_name,
-    doc_id=doc_id
-).get_result()
-# add new field and value
-doc['newfield'] = 'newvalue'
-# update document in remote db
-service.post_document(
-    db=db_name,
-    document=doc
-)
-# get updated document with latest revision from remote db
-doc = service.get_document(
-    db=db_name,
-    doc_id=doc_id
-).get_result()
-```
-You'll notice that `cloudant-python-sdk` requires an additional `get_document` call to get the latest revision.
-
-The [README in the repo contains examples of how to create a database and a document](https://github.com/IBM/cloudant-python-sdk#2-create-your-own-database-and-add-a-document).
-
 ## Other differences
-1. There's no context manager feature.  You'll need to create the client, connect to the database, fetch and save
+1. The `cloudant-python-sdk` library does not support local dictionary caching of database and document objects.
+1. There's no context manager feature in `cloudant-python-sdk`.  You'll need to create the client, connect to the database, fetch and save
 a document as separate commands.
 1. Cloudant View, Search, and Query (aka `_find` endpoint) operations will contain raw JSON response content.  
 
 ## Request mapping
 Here's a short list of which new functions to use for common operations:
-| Original operation  | New SDK operation                 |
-|---------------------|-----------------------------------|
-| `db.exists()`       | `head_database`                   |
-| `doc.exists()`      | `head_document`                   |
-| `create_document`   | `put_document` OR `post_document` |
-| `new_document`      | `put_document` OR `post_document` |
-| `get_view_result`   | `post_view`                       |
-| `get_search_result` | `post_search`                     |
-| `get_query_result`  | `post_find`                       |
 
-[We've provided a table]() that links `cloudant-python-sdk` operations with `python-cloudant` functions.
+| `python-cloudant` operation           | `cloudant-python-sdk` operation |
+|---------------------------------------|---------------------------------|
+|`Document('db_name', 'docid').fetch()` |[`getDocument`](https://cloud.ibm.com/apidocs/cloudant?code=python#getdocument)|
+|`db.get_view_result()`                 |[`postView`](https://cloud.ibm.com/apidocs/cloudant?code=python#postview)|
+|`db.get_query_result()`                |[`postFind`](https://cloud.ibm.com/apidocs/cloudant?code=python#postfind)|
+| `doc.exists()`                        |[`headDocument`](https://cloud.ibm.com/apidocs/cloudant?code=python#headdocument)|
+|`Document('db_name', 'docid').save()`  |[`putDocument`](https://cloud.ibm.com/apidocs/cloudant?code=python#putdocument)|
 
-We've also introduced several endpoints that were not supported in `python-cloudant`.  Here's a few:
-- WIP
+
+[A more complete table](#reference-table) that links `cloudant-python-sdk` operations with `python-cloudant` functions
+is provided at the end of this guide.
+
+The beta SDKs are generated from a more complete API spec and provide a significant number of operations that did not 
+exist in the legacy libraries. See [the IBM Cloud API Documentation](https://cloud.ibm.com/apidocs/cloudant) to review 
+request parameter and body options, code examples, and additional details for every endpoint.
 
 ## Known Issues
 There's an [outline of known issues](https://github.com/IBM/cloudant-python-sdk/blob/master/KNOWN_ISSUES.md) in the `cloudant-python-sdk` repository.
+
+## Reference table
+| `python-cloudant` function | `cloudant-python-sdk` function reference |
+|-----------------|---------------------|
+|metadata()|[getServerInformation](https://cloud.ibm.com/apidocs/cloudant?code=python#getserverinformation)|
+|all_dbs()|[getAllDbs](https://cloud.ibm.com/apidocs/cloudant?code=python#getalldbs)|
+|db_updates()/infinite_db_updates()|[getDbUpdates](https://cloud.ibm.com/apidocs/cloudant?code=python#getdbupdates)|
+|Replicator.create_replication()|[postReplicate](https://cloud.ibm.com/apidocs/cloudant?code=python#postreplicate)|
+|Scheduler.get_doc()|[getSchedulerDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#getschedulerdocument)|
+|Scheduler.list_jobs()|[getSchedulerJobs](https://cloud.ibm.com/apidocs/cloudant?code=python#getschedulerjobs)|
+|session()|[getSessionInformation](https://cloud.ibm.com/apidocs/cloudant?code=python#getsessioninformation)|
+|uuids()|[getUuids](https://cloud.ibm.com/apidocs/cloudant?code=python#getuuids)|
+|db.delete()|[deleteDatabase](https://cloud.ibm.com/apidocs/cloudant?code=python#deletedatabase)|
+|db.metadata()|[getDatabaseInformation](https://cloud.ibm.com/apidocs/cloudant?code=python#getdatabaseinformation)|
+|db.create_document()|[postDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#postdocument)|
+|db.create()|[putDatabase](https://cloud.ibm.com/apidocs/cloudant?code=python#putdatabase)|
+|db.all_docs()/db.keys()|[postAllDocs](https://cloud.ibm.com/apidocs/cloudant?code=python#postalldocs)|
+|db.bulk_docs()|[postBulkDocs](https://cloud.ibm.com/apidocs/cloudant?code=python#postbulkdocs)|
+|db.changes()/db.infinite_changes()|[postChanges](https://cloud.ibm.com/apidocs/cloudant?code=python#postchanges)|
+|DesignDocument(db, '_design/doc').delete()|[deleteDesignDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#deletedesigndocument)|
+|db.get_design_document()/DesignDocument(db, '_design/doc').fetch()|[getDesignDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#getdesigndocument)|
+|DesignDocument(db, '_design/doc').save()|[putDesignDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#putdesigndocument)|
+|DesignDocument(db, '_design/doc').info()|[getDesignDocumentInformation](https://cloud.ibm.com/apidocs/cloudant?code=python#getdesigndocumentinformation)|
+|db.get_search_result()|[postSearch](https://cloud.ibm.com/apidocs/cloudant?code=python#postsearch)|
+|db.get_view_result()|[postView](https://cloud.ibm.com/apidocs/cloudant?code=python#postview)|
+|db.list_design_documents()|[postDesignDocs](https://cloud.ibm.com/apidocs/cloudant?code=python#postdesigndocs)|
+|db.get_query_result()|[postFind](https://cloud.ibm.com/apidocs/cloudant?code=python#postfind)|
+|db.get_query_indexes()|[getIndexesInformation](https://cloud.ibm.com/apidocs/cloudant?code=python#getindexesinformation)|
+|db.create_query_index()|[postIndex](https://cloud.ibm.com/apidocs/cloudant?code=python#postindex)|
+|db.delete_query_index()|[deleteIndex](https://cloud.ibm.com/apidocs/cloudant?code=python#deleteindex)|
+|Document('db_name', 'docid').delete()|[getLocalDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#getlocaldocument)|
+|Document('db_name', 'docid').create()|[putLocalDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#putlocaldocument)|
+|db.missing_revisions()|[postMissingRevs](https://cloud.ibm.com/apidocs/cloudant?code=python#postmissingrevs)|
+|db.partition_metadata()|[getPartitionInformation](https://cloud.ibm.com/apidocs/cloudant?code=python#getpartitioninformation)|
+|db.partitioned_all_docs()|[postPartitionAllDocs](https://cloud.ibm.com/apidocs/cloudant?code=python#postpartitionalldocs)|
+|db.get_partitioned_search_result()|[postPartitionSearch](https://cloud.ibm.com/apidocs/cloudant?code=python#postpartitionsearch)|
+|db.get_partitioned_view_result()|[postPartitionView](https://cloud.ibm.com/apidocs/cloudant?code=python#postpartitionview)|
+|db.get_partitioned_query_result()|[postPartitionFind](https://cloud.ibm.com/apidocs/cloudant?code=python#postpartitionfind)|
+|db.revisions_diff()|[postRevsDiff](https://cloud.ibm.com/apidocs/cloudant?code=python#postrevsdiff)|
+|db.get_security_document()/db.security_document()|[getSecurity](https://cloud.ibm.com/apidocs/cloudant?code=python#getsecurity)|
+|db.share_database()|[putSecurity](https://cloud.ibm.com/apidocs/cloudant?code=python#putsecurity)|
+|db.shards()|[getShardsInformation](https://cloud.ibm.com/apidocs/cloudant?code=python#getshardsinformation)|
+|Document('db_name', 'docid').delete()|[deleteDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#deletedocument)|
+|Document('db_name', 'docid').fetch()|[getDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#getdocument)|
+|Document('db_name', 'docid').exists()|[headDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#headdocument)|
+|Document('db_name', 'docid').save()|[putDocument](https://cloud.ibm.com/apidocs/cloudant?code=python#putdocument)|
+|Document('db_name', 'docid').delete_attachment()|[deleteAttachment](https://cloud.ibm.com/apidocs/cloudant?code=python#deleteattachment)|
+|Document('db_name', 'docid').get_attachment()|[getAttachment](https://cloud.ibm.com/apidocs/cloudant?code=python#getattachment)|
+|Document('db_name', 'docid').put_attachment()|[putAttachment](https://cloud.ibm.com/apidocs/cloudant?code=python#putattachment)|
+|generate_api_key()|[postApiKeys](https://cloud.ibm.com/apidocs/cloudant?code=python#postapikeys)|
+|SecurityDocument().save()|[putCloudantSecurityConfiguration](https://cloud.ibm.com/apidocs/cloudant?code=python#putcloudantsecurityconfiguration)|
+|cors_configuration()/cors_origin()|[getCorsInformation](https://cloud.ibm.com/apidocs/cloudant?code=python#getcorsinformation)|
+|update_cors_configuration()|[putCorsConfiguration](https://cloud.ibm.com/apidocs/cloudant?code=python#putcorsconfiguration)|
