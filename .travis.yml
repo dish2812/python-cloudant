@@ -1,8 +1,6 @@
 sudo: required
 
 language: python
-arch:
-    - arm64
 
 python:
   - "3.8"
