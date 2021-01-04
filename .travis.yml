@@ -1,7 +1,4 @@
 sudo: required
-dist: bionic
-arch:
-    - arm64
 
 language: python
 
